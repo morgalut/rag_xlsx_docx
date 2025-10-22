@@ -4,31 +4,23 @@ pip install -r requirements.txt
 ```
 
 
-# If you want run loacal change path in .env
+## If you want run loacal change path in .env
 ```sh
 MONGO_URI=mongodb://localhost:27017
 ```
 
-# If you want run loacal change path in .env
+## If you want run docker change path in .env
+*(This is default)*
 ```sh
-OLLAMA_HOST=http://localhost:11434
+MONGO_URI=mongodb://mongodb:27017
 ```
-# If you want run docker change path in .env
-```sh
-OLLAMA_HOST=http://ollama:11434
-```
-
-
 
 # Build docker 
 ```sh
 docker compose up -d --build
 ```
 
-# Pull model from ollama 
-```sh
-docker exec -it rag_backend-ollama-1 ollama pull llama3.2
-```
+
 
 # Run server 
 ```sh
@@ -63,4 +55,39 @@ curl -X POST http://localhost:8000/api/query/ \
   }'
 
 
+```
+
+----
+```sh
+curl -X POST http://localhost:8000/api/query/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Summarize how memory-augmented generation is implemented in the RAG architecture. Explain the difference between session memory and long-term memory, and how embeddings with recency decay help prevent redundant or stale responses."
+  }'
+```
+----
+```sh
+curl -X POST http://localhost:8000/api/query/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Using information from the RAG design document, outline the main latency optimization techniques such as async fan-out retrieval, caching, vector index pre-warming, and token budget enforcement. How do these techniques impact overall throughput and user response time?"
+  }'
+
+```
+----
+```sh
+curl -X POST http://localhost:8000/api/query/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Based on the consolidated model performance data in rag_test_data_consolidated.xlsx, compare the latency and accuracy of the listed foundation models (OpenAI GPT-4 Turbo, Claude 3.5 Sonnet, Gemini 1.5 Pro). Identify which model offers the best tradeoff between accuracy and speed for retrieval-augmented generation workloads."
+  }'
+
+```
+---
+```sh
+curl -X POST http://localhost:8000/api/query/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "From the RAG evaluation guidelines, detail the recommended evaluation framework including synthetic Q/A pairs, LLM judges, and human audits. Describe how metrics such as Context Recall, Faithfulness, Answer Quality, MRR@10, and nDCG@10 are used to assess model performance."
+  }'
 ```
