@@ -1,0 +1,44 @@
+services:
+  # 🧠 MongoDB (for your RAG backend)
+  mongo:
+    image: mongo:8.0
+    container_name: rag_backend-mongo-1
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 🦙 Ollama model server (no shell code)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag_backend-ollama-1
+    restart: always
+    ports:
+      - "11500:11434"          # host:container
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag_net
+
+networks:
+  rag_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  ollama_models:
