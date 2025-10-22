@@ -1,5 +1,4 @@
 # rag_backend/app/core/config.py
-
 import os
 from dotenv import load_dotenv
 
@@ -23,49 +22,34 @@ MONGO_DB = os.getenv("MONGO_DB", "ragdb")
 COLLECTION = os.getenv("MONGO_COLLECTION", "chunks")
 
 # -------------------------------
-# Embeddings
+# Embeddings (kept as-is; not Ollama)
 # -------------------------------
-# Backward-compat: support old EMBED_MODEL while preferring new keys
-# - EMBED_BACKEND: "sentence" or "openai"
-# - EMBED_MODEL_NAME: e.g. "sentence-transformers/all-MiniLM-L6-v2" or "text-embedding-3-small"
 _legacy_model = os.getenv("EMBED_MODEL", "").strip()
-
-# Auto-infer backend if EMBED_BACKEND not set:
-# - If model name contains "text-embedding" -> openai
-# - Else default to "sentence"
-EMBED_BACKEND = os.getenv("EMBED_BACKEND", "").strip().lower()
-if not EMBED_BACKEND:
-    if "text-embedding" in _legacy_model.lower():
-        EMBED_BACKEND = "openai"
-    else:
-        EMBED_BACKEND = "sentence"
-
-# Choose model name with precedence: EMBED_MODEL_NAME > EMBED_MODEL > sensible default
+EMBED_BACKEND = os.getenv("EMBED_BACKEND", "").strip().lower() or (
+    "openai" if "text-embedding" in _legacy_model.lower() else "sentence"
+)
 EMBED_MODEL_NAME = os.getenv(
     "EMBED_MODEL_NAME",
     _legacy_model if _legacy_model else "sentence-transformers/all-MiniLM-L6-v2",
 ).strip()
-
-# Dim is only used by some stores/checks; keep configurable
 EMBED_DIM = _get_int("EMBED_DIM", 384)
 
 # -------------------------------
 # Retrieval / Search
 # -------------------------------
 TOP_K = _get_int("TOP_K", 5)
-
-# Accepts "true", "false", or "auto" (string). Other code lower()s and interprets it.
 USE_VECTOR_SEARCH = os.getenv("USE_VECTOR_SEARCH", "auto").strip().lower()
 
 # -------------------------------
-# Generation & Providers
+# Generation (OpenAI only)
 # -------------------------------
-GENERATION_MODE = os.getenv("GENERATION_MODE", "hybrid").strip().lower()  # "ollama" | "openai" | "hybrid"
-
-# Ollama (local)
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://ollama:11434").strip()
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "glassy").strip()
+GENERATION_MODE = os.getenv("GENERATION_MODE", "openai").strip().lower()
 
 # OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip()
+
+# Hard fail early if OpenAI is required but key is missing
+if GENERATION_MODE == "openai" and not OPENAI_API_KEY:
+    # Prefer raising at import time to avoid runtime 500s later.
+    raise RuntimeError("OPENAI_API_KEY is required for GENERATION_MODE=openai")

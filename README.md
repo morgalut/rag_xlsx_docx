@@ -58,7 +58,9 @@ curl -X POST http://localhost:8000/api/ingest/ \
 ```sh
 curl -X POST http://localhost:8000/api/query/ \
   -H "Content-Type: application/json" \
-  -d '{"query": "What is the vacation policy?"}'
+  -d '{
+    "query": "Based on the RAG System Design & Evaluation document and the consolidated model performance data, summarize the recommended retriever fusion strategy and how it combines lexical and semantic search using Reciprocal Rank Fusion (RRF). Also explain how knowledge graphs are integrated into the retrieval process for hybrid search."
+  }'
 
 
 ```

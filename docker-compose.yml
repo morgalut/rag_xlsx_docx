@@ -16,24 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # 🦙 Ollama model server (no shell code)
-  ollama:
-    image: ollama/ollama:latest
-    container_name: rag_backend-ollama-1
-    restart: always
-    ports:
-      - "11500:11434"          # host:container
-    volumes:
-      - ollama_models:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    networks:
-      - rag_net
 
 networks:
   rag_net:
@@ -41,4 +23,4 @@ networks:
 
 volumes:
   mongo_data:
-  ollama_models:
+

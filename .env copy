@@ -1,21 +1,21 @@
-# Mongo settings
+# Mongo
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB=ragdb
 MONGO_COLLECTION=chunks
 
-# Embeddings
-EMBED_MODEL=sentence-transformers/all-MiniLM-L6-v2
+# Embeddings (kept sentence transformers; not Ollama)
+EMBED_BACKEND=sentence
+EMBED_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
 EMBED_DIM=384
 
-# LLM providers
+# Retrieval
 USE_VECTOR_SEARCH=false
 TOP_K=5
 
-# Hybrid generation
-OLLAMA_HOST=http://ollama:11434
-OLLAMA_MODEL=glassy  # e.g., "mistral" or "gemma:2b"
-
-OPENAI_API_KEY=OPENAI_API_KEY
-
+# OpenAI Settings
+# =========================
+OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4o-mini
-GENERATION_MODE=hybrid  # options: ollama | openai | hybrid
+
+# Generation (OpenAI only)
+GENERATION_MODE=openai
