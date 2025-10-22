@@ -12,7 +12,7 @@ MONGO_URI=mongodb://localhost:27017
 ## If you want run docker change path in .env
 *(This is default)*
 ```sh
-MONGO_URI=mongodb://mongodb:27017
+MONGO_URI=mongodb://mongo:27017
 ```
 
 # Build docker 
