@@ -1,14 +1,4 @@
-"""
-Multi-Pass Retriever (Agentic) for RAG
-=====================================
 
-Pass 1: Semantic KNN with domain-aware filter (HR, IT, Finance)
-Pass 2: Keyword/regex scan on text + structured meta (xlsx/docx)
-Pass 3: Broadened semantic (query rewrites / synonyms)
-
-Always returns hits (if present). Provides status + diagnostics so the
-Generator can compose a grounded answer instead of "I don't know".
-"""
 
 from __future__ import annotations
 import re

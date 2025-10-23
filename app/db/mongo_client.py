@@ -1,10 +1,4 @@
-"""
-MongoDB Manager (OOP Singleton)
-===============================
 
-Encapsulates all MongoDB connection logic in an object-oriented, reusable class.
-Ensures there is only one shared client throughout the app lifecycle.
-"""
 
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
@@ -36,18 +30,16 @@ class MongoDBManager:
             self._initialized = True
             logger.debug("MongoDBManager initialized with URI=%s, DB=%s", uri, db_name)
 
-    # ------------------------------------------------------------------
     # Core connection methods
-    # ------------------------------------------------------------------
     def connect(self) -> MongoClient:
         """Connect to MongoDB if not already connected."""
         if MongoDBManager._client is None:
             try:
                 MongoDBManager._client = MongoClient(self._uri, serverSelectionTimeoutMS=10000)
                 MongoDBManager._client.admin.command("ping")
-                logger.info("✅ Connected to MongoDB: %s", self._uri)
+                logger.info(" Connected to MongoDB: %s", self._uri)
             except ServerSelectionTimeoutError as e:
-                logger.error("❌ Could not connect to MongoDB at %s: %s", self._uri, e)
+                logger.error(" Could not connect to MongoDB at %s: %s", self._uri, e)
                 raise
         return MongoDBManager._client
 
@@ -66,9 +58,7 @@ class MongoDBManager:
         logger.debug("Using MongoDB collection: %s", name)
         return collection
 
-    # ------------------------------------------------------------------
     # Health / utility methods
-    # ------------------------------------------------------------------
     def ping(self) -> bool:
         """Check MongoDB connectivity."""
         try:
@@ -86,9 +76,7 @@ class MongoDBManager:
             MongoDBManager._client = None
             logger.info("🔒 MongoDB connection closed.")
 
-    # ------------------------------------------------------------------
     # Convenience factory method
-    # ------------------------------------------------------------------
     @classmethod
     def get_collection_static(cls, name: str = COLLECTION):
         """Shortcut for modules that need quick collection access."""
@@ -96,8 +84,6 @@ class MongoDBManager:
         return instance.get_collection(name)
 
 
-# ----------------------------------------------------------------------
 # Export a shared singleton instance
-# ----------------------------------------------------------------------
 mongo_manager = MongoDBManager()
 get_collection = mongo_manager.get_collection  # backward compatibility

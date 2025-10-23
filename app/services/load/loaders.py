@@ -22,9 +22,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------
+
 # Base Loader
-# ---------------------------------------------------------------------
+
 class BaseLoader(ABC):
     """Abstract base loader class for all document types."""
 
@@ -56,9 +56,9 @@ class BaseLoader(ABC):
         raise NotImplementedError
 
 
-# ---------------------------------------------------------------------
+
 # XLSX Loader
-# ---------------------------------------------------------------------
+
 class XLSXLoader(BaseLoader):
     """Loads Excel such that each row → a Segment with readable metadata."""
 
@@ -95,13 +95,13 @@ class XLSXLoader(BaseLoader):
                 meta["row"] = row_map
                 segments.append(Segment(text=text, meta=meta))
 
-        logger.info(f"✅ Loaded {len(segments)} segments from Excel: {self.path.name}")
+        logger.info(f" Loaded {len(segments)} segments from Excel: {self.path.name}")
         return segments
 
 
-# ---------------------------------------------------------------------
+
 # DOCX Loader (Hardened)
-# ---------------------------------------------------------------------
+
 class DOCXLoader(BaseLoader):
     """
     Parses Word documents into logical Segments:
@@ -154,7 +154,7 @@ class DOCXLoader(BaseLoader):
             if not txt:
                 return None
             if len(txt) > self.max_chars:
-                logger.debug(f"✂️  Truncating long paragraph ({len(txt)} → {self.max_chars})")
+                logger.debug(f"  Truncating long paragraph ({len(txt)} → {self.max_chars})")
                 txt = txt[: self.max_chars]
             return txt
 
@@ -225,15 +225,15 @@ class DOCXLoader(BaseLoader):
                 table_to_segments(table, table_counter)
                 table_counter += 1
 
-        logger.info(f"✅ Loaded {len(segments)} segments from DOCX: {self.path.name}")
+        logger.info(f" Loaded {len(segments)} segments from DOCX: {self.path.name}")
         if not segments:
-            logger.warning(f"⚠️ No valid text found in DOCX: {self.path.name}")
+            logger.warning(f" No valid text found in DOCX: {self.path.name}")
         return segments
 
 
-# ---------------------------------------------------------------------
+
 # Factory
-# ---------------------------------------------------------------------
+
 class FileLoaderFactory:
     """Factory to select the appropriate loader class based on file extension."""
 
@@ -256,9 +256,9 @@ class FileLoaderFactory:
         return loader_cls(path, **kwargs)
 
 
-# ---------------------------------------------------------------------
+
 # Convenience Function
-# ---------------------------------------------------------------------
+
 def load_any(path: str, **kwargs) -> List[Segment]:
     """Shortcut to load any supported file (Excel or Word)."""
     loader = FileLoaderFactory.create_loader(path, **kwargs)

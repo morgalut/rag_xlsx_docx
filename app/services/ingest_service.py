@@ -28,9 +28,7 @@ class IngestService:
         chunk_overlap: int = 150,
         embed_model: Optional[str] = None,
     ):
-        # ------------------------------------------------------------------
         # Embedder initialization (safe, env-aware, and validated)
-        # ------------------------------------------------------------------
         if embedder is not None:
             self.embedder = embedder
         elif embed_model:
@@ -39,26 +37,22 @@ class IngestService:
             self.embedder = EmbedderFactory.create()
 
         print(
-            f"🧪 Using embedder={type(self.embedder).__name__}, "
+            f" Using embedder={type(self.embedder).__name__}, "
             f"model={getattr(self.embedder, 'model_name', None)}"
         )
 
-        # ------------------------------------------------------------------
         # Chunker and Vector Store
-        # ------------------------------------------------------------------
         self.chunker = chunker or ChunkerFactory.create(
             "simple", max_chars=chunk_size, overlap=chunk_overlap
         )
         self.vstore = vstore or VectorStoreFactory.create("mongo")
 
-    # ------------------------------------------------------------------
     # Helpers
-    # ------------------------------------------------------------------
     def _resolve_path(self, path: str) -> Path:
         """Ensure consistent absolute path resolution."""
         p = Path(path).expanduser().resolve()
         if not p.exists():
-            raise FileNotFoundError(f"❌ Path not found: {p}")
+            raise FileNotFoundError(f" Path not found: {p}")
         return p
 
     def _iter_files(self, base_path: Path) -> List[Path]:
@@ -85,9 +79,7 @@ class IngestService:
             if str(t).strip()
         ]
 
-    # ------------------------------------------------------------------
     # Main ingestion logic
-    # ------------------------------------------------------------------
     def ingest(
         self, doc_id: str, path: str, base_meta: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
@@ -96,18 +88,18 @@ class IngestService:
 
         files = self._iter_files(base_path)
         if not files:
-            raise FileNotFoundError(f"❌ No supported files found in: {base_path}")
+            raise FileNotFoundError(f" No supported files found in: {base_path}")
 
         total_segments = 0
         total_chunks = 0
         total_inserted = 0
         processed_files: List[str] = []
 
-        print(f"🚀 Starting ingestion for doc_id='{doc_id}' from path='{base_path}'")
+        print(f" Starting ingestion for doc_id='{doc_id}' from path='{base_path}'")
 
         for file_path in files:
             try:
-                print(f"\n📄 Loading file: {file_path.name}")
+                print(f"\n Loading file: {file_path.name}")
 
                 # --- Detect file type ---
                 ext = file_path.suffix.lower().lstrip(".")
@@ -116,7 +108,7 @@ class IngestService:
                 # --- Load file content ---
                 raw_data = load_any(str(file_path), base_meta=base_meta)
                 if not raw_data:
-                    print(f"⚠️ Loader returned empty list for {file_path.name}")
+                    print(f" Loader returned empty list for {file_path.name}")
                     continue
 
                 # --- Merge file metadata ---
@@ -131,10 +123,10 @@ class IngestService:
                 # --- Normalize ---
                 segments = self._normalize_segments(raw_data, file_meta)
                 if not segments:
-                    print(f"⚠️ No segments found in {file_path.name}")
+                    print(f" No segments found in {file_path.name}")
                     continue
 
-                print(f"🧩 Loaded {len(segments)} segments from {file_path.name}")
+                print(f" Loaded {len(segments)} segments from {file_path.name}")
                 sample_text = segments[0].text[:120].replace("\n", " ")
                 print(f"🔍 Sample segment: {sample_text}...")
 
@@ -142,13 +134,13 @@ class IngestService:
 
                 # --- Chunk ---
                 chunks = self.chunker.chunk(segments)
-                print(f"✂️  Created {len(chunks)} chunks from {file_path.name}")
+                print(f"  Created {len(chunks)} chunks from {file_path.name}")
                 total_chunks += len(chunks)
 
                 # --- Embed ---
                 texts = [c.text for c in chunks]
                 vectors = self.embedder.embed(texts)
-                print(f"🧠 Generated embeddings for {len(vectors)} chunks")
+                print(f" Generated embeddings for {len(vectors)} chunks")
 
                 # --- Insert ---
                 res = self.vstore.insert_segments(
@@ -164,15 +156,15 @@ class IngestService:
                 )
 
                 inserted = res.get("inserted", 0)
-                print(f"✅ Inserted {inserted} chunks from {file_path.name} into MongoDB")
+                print(f" Inserted {inserted} chunks from {file_path.name} into MongoDB")
 
                 total_inserted += inserted
                 processed_files.append(file_path.name)
 
             except Exception as e:
-                print(f"❌ Error processing {file_path.name}: {e}")
+                print(f" Error processing {file_path.name}: {e}")
 
-        print("\n📦 Ingestion Summary")
+        print("\n Ingestion Summary")
         print(f"  ├─ Segments loaded: {total_segments}")
         print(f"  ├─ Chunks generated: {total_chunks}")
         print(f"  └─ Chunks inserted: {total_inserted}")

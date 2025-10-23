@@ -1,10 +1,3 @@
-"""
-LangChain RAG Pipeline (OpenAI-only)
-====================================
-- Mongo/Local vector store retained.
-- LangChain usage kept, but LLM helper uses only OpenAI.
-- All Ollama/hybrid code removed.
-"""
 
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Type
@@ -78,7 +71,7 @@ class LocalVectorStore(BaseVectorStore):
         for i, (t, v) in enumerate(zip(texts, vectors)):
             docs.append({"doc_id": doc_id, "chunk_id": i, "text": t, "vector": v, "meta": metas[i]})
         self.collection.insert_many(docs, ordered=False)
-        logger.info("✅ Inserted %d local chunks for %s", len(docs), doc_id)
+        logger.info(" Inserted %d local chunks for %s", len(docs), doc_id)
         return {"inserted": len(docs)}
 
     def query_knn(self, query_vec, k=5, filter_=None):
@@ -104,15 +97,15 @@ class MongoVectorStore(BaseVectorStore):
         collection = mongo_manager.get_collection(coll_name)
         super().__init__(collection)
         self._ensure_schema()
-        logger.info("✅ MongoVectorStore initialized (collection: %s)", coll_name)
+        logger.info(" MongoVectorStore initialized (collection: %s)", coll_name)
 
     def _ensure_schema(self):
         try:
             self.collection.create_index([("doc_id", ASCENDING), ("chunk_id", ASCENDING)], unique=True)
             self.collection.create_index("vector")
-            logger.debug("✅ Mongo indexes ensured")
+            logger.debug(" Mongo indexes ensured")
         except Exception as e:
-            logger.warning("⚠️ Index creation failed: %s", e)
+            logger.warning(" Index creation failed: %s", e)
 
     def insert_chunks(self, doc_id, chunks, vectors, meta=None):
         metas = [meta or {} for _ in chunks]
@@ -127,7 +120,7 @@ class MongoVectorStore(BaseVectorStore):
         docs = [{"doc_id": doc_id, "chunk_id": i + start_idx, "text": t, "vector": v, "meta": metas[i]}
                 for i, (t, v) in enumerate(zip(texts, vectors))]
         self.collection.insert_many(docs, ordered=False)
-        logger.info("✅ Inserted %d chunks for %s", len(docs), doc_id)
+        logger.info(" Inserted %d chunks for %s", len(docs), doc_id)
         return {"inserted": len(docs)}
 
     def query_knn(self, query_vec, k=5, filter_=None):
@@ -147,7 +140,7 @@ class MongoVectorStore(BaseVectorStore):
                 if results:
                     return results
             except Exception as e:
-                logger.warning("⚠️ Atlas vector search unavailable: %s", e)
+                logger.warning(" Atlas vector search unavailable: %s", e)
         return LocalVectorStore(self.collection).query_knn(query_vec, k, filter_)
 
     def create_langchain_store(self, embedder):
@@ -157,10 +150,10 @@ class MongoVectorStore(BaseVectorStore):
                     embedding=embedder, collection=self.collection,
                     index_name="vec_idx", text_key="text", embedding_key="vector"
                 )
-                logger.info("✅ MongoDBAtlasVectorSearch initialized")
+                logger.info(" MongoDBAtlasVectorSearch initialized")
                 return store
             except Exception as e:
-                logger.warning("⚠️ Atlas retriever failed (%s); fallback to LocalVectorStore", e)
+                logger.warning(" Atlas retriever failed (%s); fallback to LocalVectorStore", e)
         return LocalVectorStore(self.collection)
 
 # ---------------- LangChain helpers (OpenAI only) ----------------
@@ -169,7 +162,7 @@ def _make_openai_llm(model: str, api_key: str, temperature: float = 0.2):
         from langchain_openai import ChatOpenAI
         return ChatOpenAI(model=model, api_key=api_key, temperature=temperature)
     except Exception as e:
-        logger.warning("⚠️ ChatOpenAI unavailable (%s). Falling back to native OpenAI.", e)
+        logger.warning(" ChatOpenAI unavailable (%s). Falling back to native OpenAI.", e)
         class _Compat:
             def __init__(self, model, api_key, temperature):
                 try:
@@ -238,7 +231,7 @@ class LangChainRAGPipeline:
                     if hasattr(self.retriever, 'invoke')
                     else self.retriever.get_relevant_documents(question))
         except Exception as e:
-            logger.warning("⚠️ Retriever failed: %s", e)
+            logger.warning(" Retriever failed: %s", e)
             docs = []
 
         context = "\n\n".join([d.page_content for d in docs]) if docs else "No context found."
@@ -247,7 +240,7 @@ class LangChainRAGPipeline:
             result = self.llm.invoke(prompt)
             text = getattr(result, "content", None) or str(result)
         except Exception as e:
-            logger.error("❌ LLM invocation failed: %s", e)
+            logger.error(" LLM invocation failed: %s", e)
             text = f"[Error generating answer: {e}]"
 
         return {
@@ -272,7 +265,7 @@ class LangChainRAGPipeline:
                                     for d in result.get("source_documents", [])]
                     }
                 except Exception as e:
-                    logger.warning("⚠️ RetrievalQA failed, trying LCEL: %s", e)
+                    logger.warning(" RetrievalQA failed, trying LCEL: %s", e)
 
             if HAS_LCEL_CHAIN:
                 try:
@@ -288,11 +281,11 @@ class LangChainRAGPipeline:
                         "sources": [{"content": d.page_content, "metadata": d.metadata} for d in sources]
                     }
                 except Exception as e:
-                    logger.warning("⚠️ LCEL chain failed, using manual: %s", e)
+                    logger.warning(" LCEL chain failed, using manual: %s", e)
 
-            logger.info("⚠️ Using manual RAG pipeline fallback")
+            logger.info(" Using manual RAG pipeline fallback")
             return self._manual_run(question)
 
         except Exception as e:
-            logger.exception("❌ Pipeline failed: %s", e)
+            logger.exception(" Pipeline failed: %s", e)
             return {"answer": f"[Pipeline error: {e}]", "sources": []}

@@ -1,13 +1,4 @@
-"""
-MongoDB Vector Store (Improved & File-Safe)
-===========================================
 
-Enhanced persistence layer for RAG chunks:
-- Handles XLSX and DOCX files safely under the same doc_id
-- Automatically offsets chunk_id to prevent overwrites
-- Namespaces per file automatically (doc_id + file stem)
-- Supports duplicate recovery and local vector search fallback
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -25,9 +16,7 @@ from app.db.mongo_client import MongoDBManager
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------
 # Abstract Base Class
-# ---------------------------------------------------------------------
 class BaseVectorStore(ABC):
     """Abstract interface for any vector storage backend."""
 
@@ -72,9 +61,7 @@ class BaseVectorStore(ABC):
         return _retrieve
 
 
-# ---------------------------------------------------------------------
 # Local Vector Store (in-memory cosine)
-# ---------------------------------------------------------------------
 class LocalVectorStore(BaseVectorStore):
     """Lightweight local cosine similarity vector store."""
 
@@ -101,7 +88,7 @@ class LocalVectorStore(BaseVectorStore):
             })
 
         result = self.collection.insert_many(docs, ordered=False)
-        logger.info("✅ Inserted %d local chunks for %s", len(result.inserted_ids), doc_id)
+        logger.info(" Inserted %d local chunks for %s", len(result.inserted_ids), doc_id)
         return {"inserted": len(result.inserted_ids)}
 
     def query_knn(self, query_vec, k=5, filter_=None):
@@ -133,9 +120,7 @@ class LocalVectorStore(BaseVectorStore):
         ]
 
 
-# ---------------------------------------------------------------------
 # Mongo Vector Store (primary backend)
-# ---------------------------------------------------------------------
 class MongoVectorStore(BaseVectorStore):
     """Primary MongoDB persistence backend for RAG chunks."""
 
@@ -144,7 +129,7 @@ class MongoVectorStore(BaseVectorStore):
         collection = mongo_manager.get_collection(coll_name)
         super().__init__(collection)
         self._ensure_schema()
-        logger.info("✅ MongoVectorStore initialized (collection: %s)", coll_name)
+        logger.info(" MongoVectorStore initialized (collection: %s)", coll_name)
 
     # --------------------------------------------------------------
     # Schema / Indexing
@@ -155,16 +140,16 @@ class MongoVectorStore(BaseVectorStore):
                 [("doc_id", ASCENDING), ("chunk_id", ASCENDING)], unique=True
             )
             self.collection.create_index("vector")
-            logger.debug("✅ MongoDB indexes ensured.")
+            logger.debug(" MongoDB indexes ensured.")
         except Exception as e:
-            logger.warning("⚠️ Could not ensure MongoDB indexes: %s", e)
+            logger.warning(" Could not ensure MongoDB indexes: %s", e)
 
     # --------------------------------------------------------------
     # Cleanup
     # --------------------------------------------------------------
     def delete_all_for_doc(self, doc_id: str):
         res = self.collection.delete_many({"doc_id": doc_id})
-        logger.info("🧹 Removed %d chunks for doc_id=%s", res.deleted_count, doc_id)
+        logger.info(" Removed %d chunks for doc_id=%s", res.deleted_count, doc_id)
         return res.deleted_count
 
     # --------------------------------------------------------------
@@ -206,17 +191,17 @@ class MongoVectorStore(BaseVectorStore):
             })
 
         if not docs:
-            logger.warning("⚠️ No chunks to insert for %s", safe_doc_id)
+            logger.warning(" No chunks to insert for %s", safe_doc_id)
             return {"inserted": 0}
 
         try:
             result = self.collection.insert_many(docs, ordered=False)
-            logger.info("✅ Inserted %d chunks for %s", len(result.inserted_ids), safe_doc_id)
+            logger.info(" Inserted %d chunks for %s", len(result.inserted_ids), safe_doc_id)
             return {"inserted": len(result.inserted_ids)}
 
         except Exception as e:
             if "E11000" in str(e):
-                logger.warning("⚠️ Duplicate key for %s — recalculating chunk IDs", safe_doc_id)
+                logger.warning(" Duplicate key for %s — recalculating chunk IDs", safe_doc_id)
                 max_doc = self.collection.find_one(
                     {"doc_id": safe_doc_id}, sort=[("chunk_id", -1)]
                 ) or {"chunk_id": -1}
@@ -224,10 +209,10 @@ class MongoVectorStore(BaseVectorStore):
                 for idx, d in enumerate(docs):
                     d["chunk_id"] = offset + idx
                 result = self.collection.insert_many(docs, ordered=False)
-                logger.info("✅ Duplicate recovery succeeded for %s", safe_doc_id)
+                logger.info(" Duplicate recovery succeeded for %s", safe_doc_id)
                 return {"inserted": len(docs), "recovered": True}
 
-            logger.error("❌ Insert failed for %s: %s", safe_doc_id, e)
+            logger.error(" Insert failed for %s: %s", safe_doc_id, e)
             raise
 
     # --------------------------------------------------------------
@@ -265,14 +250,12 @@ class MongoVectorStore(BaseVectorStore):
                 if results:
                     return results
             except Exception as e:
-                logger.warning("⚠️ Vector search unavailable, fallback to cosine: %s", e)
+                logger.warning(" Vector search unavailable, fallback to cosine: %s", e)
 
         return LocalVectorStore(self.collection).query_knn(query_vec, k, filter_)
 
 
-# ---------------------------------------------------------------------
 # Factory
-# ---------------------------------------------------------------------
 class VectorStoreFactory:
     """Factory to create vector store backend dynamically."""
 

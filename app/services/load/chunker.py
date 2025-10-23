@@ -4,9 +4,9 @@ from typing import Iterable, List
 from app.models.types import Segment
 
 
-# ---------------------------------------------------------------------
+
 # Abstract base
-# ---------------------------------------------------------------------
+
 class BaseChunker(ABC):
     """Chunk Segments while *preserving metadata*."""
 
@@ -30,9 +30,9 @@ class BaseChunker(ABC):
         return Segment(text=seg.text, meta=meta)
 
 
-# ---------------------------------------------------------------------
+
 # Line-aware chunker (good default)
-# ---------------------------------------------------------------------
+
 class SimpleTokenChunker(BaseChunker):
     """
     Splits each Segment.text by newlines into chunks <= max_chars.
@@ -58,9 +58,9 @@ class SimpleTokenChunker(BaseChunker):
         return out
 
 
-# ---------------------------------------------------------------------
+
 # Paragraph-based chunker
-# ---------------------------------------------------------------------
+
 class ParagraphChunker(BaseChunker):
     def chunk(self, segments: Iterable[Segment]) -> List[Segment]:
         out: List[Segment] = []
@@ -81,9 +81,9 @@ class ParagraphChunker(BaseChunker):
         return out
 
 
-# ---------------------------------------------------------------------
+
 # Factory
-# ---------------------------------------------------------------------
+
 class ChunkerFactory:
     _registry = {
         "simple": SimpleTokenChunker,

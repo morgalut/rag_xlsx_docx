@@ -1,11 +1,4 @@
-"""
-RAG Query Endpoint (2025 Improved)
-==================================
 
-Handles incoming user questions via the modular RAG pipeline.
-Adds semantic question analysis, structured responses, and
-enhanced observability.
-"""
 
 from __future__ import annotations
 import logging
@@ -41,20 +34,20 @@ async def query_rag(req: QueryRequest) -> JSONResponse:
         )
 
     question = req.query.strip()
-    logger.info("🧠 Received RAG query: %s", question[:120])
+    logger.info(" Received RAG query: %s", question[:120])
 
     try:
-        # 1️⃣  Analyze question semantics
+        #   Analyze question semantics
         analysis = analyze_question(question)
-        logger.debug("🔍 Question analysis: %s", analysis)
+        logger.debug(" Question analysis: %s", analysis)
 
-        # 2️⃣  Build RAG pipeline (Retriever + Generator)
+        #   Build RAG pipeline (Retriever + Generator)
         pipeline = create_default_pipeline()
 
-        # 3️⃣  Run query through RAG pipeline
+        #   Run query through RAG pipeline
         result = pipeline.run(question)
 
-        # 4️⃣  Format structured response
+        #   Format structured response
         payload = {
             "ok": True,
             "query": question,
@@ -66,13 +59,13 @@ async def query_rag(req: QueryRequest) -> JSONResponse:
             },
         }
 
-        logger.info("✅ RAG query processed successfully for domain=%s", analysis.get("domain"))
+        logger.info(" RAG query processed successfully for domain=%s", analysis.get("domain"))
         return JSONResponse(status_code=status.HTTP_200_OK, content=payload)
 
     except HTTPException:
         raise  # re-raise known HTTP errors unchanged
     except Exception as e:
-        logger.exception("❌ RAG query failed: %s", e)
+        logger.exception(" RAG query failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"RAG query failed: {e}",

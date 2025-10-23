@@ -11,9 +11,9 @@ from app.core.config import EMBED_BACKEND, EMBED_MODEL_NAME, OPENAI_API_KEY
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------
+
 # Base Abstract Class
-# ---------------------------------------------------------------------
+
 class BaseEmbedder(ABC):
     """Abstract base for all embedding backends, with safe tokenizer support."""
 
@@ -31,7 +31,7 @@ class BaseEmbedder(ABC):
     def tokenize(self, texts: List[str]) -> List[List[str]]:
         """Safe interface for tokenization (always available)."""
         if not hasattr(self.tokenizer, "tokenize"):
-            logger.warning("⚠️ Embedder has no tokenizer; using fallback.")
+            logger.warning(" Embedder has no tokenizer; using fallback.")
             self.tokenizer = self._make_fallback_tokenizer()
         return [self.tokenizer.tokenize(t) for t in texts]
 
@@ -43,9 +43,9 @@ class BaseEmbedder(ABC):
         return self.embed(texts)
 
 
-# ---------------------------------------------------------------------
+
 # SentenceTransformer Implementation
-# ---------------------------------------------------------------------
+
 class SentenceTransformerEmbedder(BaseEmbedder):
     """Wrapper for SentenceTransformers with guaranteed tokenizer and safe defaults."""
 
@@ -66,19 +66,19 @@ class SentenceTransformerEmbedder(BaseEmbedder):
             tok = getattr(self.model, "tokenizer", None)
             if hasattr(tok, "tokenize"):
                 self.tokenizer = tok
-                logger.info(f"✅ Using SentenceTransformer tokenizer for {resolved} ({device})")
+                logger.info(f" Using SentenceTransformer tokenizer for {resolved} ({device})")
             else:
-                logger.warning(f"⚠️ No tokenizer in model; using fallback for {resolved}")
+                logger.warning(f" No tokenizer in model; using fallback for {resolved}")
         except Exception as e:
-            logger.error(f"❌ Failed to load SentenceTransformer '{resolved}': {e}")
+            logger.error(f" Failed to load SentenceTransformer '{resolved}': {e}")
             raise
 
-        logger.info(f"✅ Loaded SentenceTransformer model: {resolved} on device={device}")
+        logger.info(f" Loaded SentenceTransformer model: {resolved} on device={device}")
 
     def embed(self, texts: List[str]) -> List[List[float]]:
         """Compute sentence embeddings safely."""
         if not texts:
-            logger.warning("⚠️ Empty text list passed to embed().")
+            logger.warning(" Empty text list passed to embed().")
             return []
 
         try:
@@ -102,9 +102,9 @@ class SentenceTransformerEmbedder(BaseEmbedder):
         return self.embed([text])[0]
 
 
-# ---------------------------------------------------------------------
+
 # OpenAI Embedding Backend
-# ---------------------------------------------------------------------
+
 class OpenAIEmbedder(BaseEmbedder):
     """Embedding backend using the OpenAI API."""
 
@@ -116,22 +116,22 @@ class OpenAIEmbedder(BaseEmbedder):
     def embed(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings via the OpenAI API."""
         if not texts:
-            logger.warning("⚠️ Empty input passed to OpenAIEmbedder.embed().")
+            logger.warning(" Empty input passed to OpenAIEmbedder.embed().")
             return []
 
         try:
             resp = self.client.embeddings.create(model=self.model_name, input=texts)
             embeddings = [d.embedding for d in resp.data]
-            logger.info(f"✅ Generated {len(embeddings)} OpenAI embeddings using {self.model_name}")
+            logger.info(f" Generated {len(embeddings)} OpenAI embeddings using {self.model_name}")
             return embeddings
         except Exception as e:
             logger.error(f"OpenAI embedding failed: {e}")
             raise
 
 
-# ---------------------------------------------------------------------
+
 # Embedder Factory
-# ---------------------------------------------------------------------
+
 class EmbedderFactory:
     """Factory for dynamically selecting embedding backend."""
 
@@ -150,7 +150,7 @@ class EmbedderFactory:
         """Auto-detect backend from .env or default to SentenceTransformer."""
         backend = os.getenv("EMBED_BACKEND", EMBED_BACKEND).lower()
         model_name = os.getenv("EMBED_MODEL_NAME", EMBED_MODEL_NAME)
-        logger.info(f"🧠 Creating embedder: backend={backend}, model={model_name}")
+        logger.info(f" Creating embedder: backend={backend}, model={model_name}")
 
         # Auto-detect by backend or model string
         if "sentence" in backend or "minilm" in backend:
@@ -167,5 +167,5 @@ class EmbedderFactory:
                 raise ValueError(f"Unknown embedding backend: {backend}")
 
         embedder = embedder_cls(model_name=model_name)
-        logger.info(f"✅ EmbedderFactory created: {embedder_cls.__name__} ({model_name})")
+        logger.info(f" EmbedderFactory created: {embedder_cls.__name__} ({model_name})")
         return embedder

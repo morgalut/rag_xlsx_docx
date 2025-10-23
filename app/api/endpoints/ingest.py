@@ -18,7 +18,7 @@ def ingest(req: IngestRequest):
         raise HTTPException(status_code=404, detail=f"Path not found: {path}")
 
     try:
-        # ✅ Automatic metadata enrichment
+        #  Automatic metadata enrichment
         auto_meta = {
             "source_path": str(path),
             "file_type": "folder" if path.is_dir() else path.suffix.lower(),

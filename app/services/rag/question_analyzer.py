@@ -1,16 +1,3 @@
-"""
-Question Analyzer (compatible with all OpenAI SDK versions · 2025)
-==================================================================
-
-Analyzes an incoming user question and produces structured metadata
-for RAG retrieval and reasoning:
-- domain: broad topic area (HR, IT, Finance, etc.)
-- intent: question type (policy, definition, numeric, etc.)
-- keywords: list of relevant search terms
-
-Auto-detects whether you are using the new `openai>=1.0`
-or legacy `openai<=0.28` client and calls the right method.
-"""
 
 from __future__ import annotations
 import json
@@ -29,13 +16,13 @@ try:
     from openai import OpenAI
     client = OpenAI(api_key=OPENAI_API_KEY)
     _USE_NEW = True
-    logger.debug("✅ Using new OpenAI SDK (>=1.0)")
+    logger.debug(" Using new OpenAI SDK (>=1.0)")
 except ImportError:
     import openai  # legacy SDK
     openai.api_key = OPENAI_API_KEY
     client = openai
     _USE_NEW = False
-    logger.debug("⚠️ Using legacy OpenAI SDK (<1.0)")
+    logger.debug(" Using legacy OpenAI SDK (<1.0)")
 
 # ---------------------------------------------------------------------
 # Analyzer function
@@ -68,7 +55,7 @@ def analyze_question(question: str) -> Dict[str, Any]:
 
     try:
         if _USE_NEW:
-            # ✅ modern client
+            #  modern client
             response = client.chat.completions.create(
                 model=OPENAI_MODEL or "gpt-4o-mini",
                 temperature=0,
@@ -80,7 +67,7 @@ def analyze_question(question: str) -> Dict[str, Any]:
             )
             content = response.choices[0].message.content
         else:
-            # 🧩 legacy client
+            #  legacy client
             response = client.ChatCompletion.create(
                 model=OPENAI_MODEL or "gpt-4",
                 temperature=0,
@@ -94,9 +81,9 @@ def analyze_question(question: str) -> Dict[str, Any]:
         result = json.loads(content)
         if not isinstance(result, dict):
             raise ValueError("Response JSON not a dict")
-        logger.debug(f"🧠 Question analysis result: {result}")
+        logger.debug(f" Question analysis result: {result}")
         return result
 
     except Exception as e:
-        logger.warning(f"⚠️ Question analysis failed: {e}")
+        logger.warning(f" Question analysis failed: {e}")
         return {"domain": None, "intent": "unknown", "keywords": [question]}

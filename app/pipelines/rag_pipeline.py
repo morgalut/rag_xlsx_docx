@@ -10,9 +10,9 @@ from app.services.rag.generator import Generator
 from app.services.rag.question_analyzer import analyze_question
 
 
-# ---------------------------------------------------------------------
+
 # Abstract base classes
-# ---------------------------------------------------------------------
+
 class BaseRetriever(ABC):
     @abstractmethod
     def retrieve(self, query: str) -> Tuple[List[str], List[Dict[str, Any]]]:
@@ -27,9 +27,9 @@ class BaseGenerator(ABC):
         raise NotImplementedError
 
 
-# ---------------------------------------------------------------------
+
 # Concrete Pipeline
-# ---------------------------------------------------------------------
+
 class RAGPipeline:
     def __init__(self, retriever: Retriever, generator: Generator):
         self.retriever = retriever

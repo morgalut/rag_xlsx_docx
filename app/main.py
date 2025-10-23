@@ -14,15 +14,15 @@ app = FastAPI(title="LangChain RAG API", version="1.0")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("🚀 Starting RAG Backend application...")
+    logger.info(" Starting RAG Backend application...")
     ok = verify_mongo_connection()
     if ok:
         print(" Database connection established successfully.")
     else:
-        print("⚠️ MongoDB not reachable. The app will still start, but DB operations may fail.")
+        print(" MongoDB not reachable. The app will still start, but DB operations may fail.")
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("🛑 Shutting down RAG Backend application...")
+    logger.info(" Shutting down RAG Backend application...")
 
 app.include_router(api_router)

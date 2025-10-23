@@ -14,16 +14,12 @@ def _get_int(name: str, default: int) -> int:
     except Exception:
         return default
 
-# -------------------------------
 # MongoDB
-# -------------------------------
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
 MONGO_DB = os.getenv("MONGO_DB", "ragdb")
 COLLECTION = os.getenv("MONGO_COLLECTION", "chunks")
 
-# -------------------------------
 # Embeddings (kept as-is; not Ollama)
-# -------------------------------
 _legacy_model = os.getenv("EMBED_MODEL", "").strip()
 EMBED_BACKEND = os.getenv("EMBED_BACKEND", "").strip().lower() or (
     "openai" if "text-embedding" in _legacy_model.lower() else "sentence"
@@ -34,15 +30,11 @@ EMBED_MODEL_NAME = os.getenv(
 ).strip()
 EMBED_DIM = _get_int("EMBED_DIM", 384)
 
-# -------------------------------
 # Retrieval / Search
-# -------------------------------
 TOP_K = _get_int("TOP_K", 5)
 USE_VECTOR_SEARCH = os.getenv("USE_VECTOR_SEARCH", "auto").strip().lower()
 
-# -------------------------------
 # Generation (OpenAI only)
-# -------------------------------
 GENERATION_MODE = os.getenv("GENERATION_MODE", "openai").strip().lower()
 
 # OpenAI
